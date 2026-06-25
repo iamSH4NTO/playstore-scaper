@@ -28,22 +28,19 @@ if [ ! -d ".venv" ]; then
     fi
 fi
 
-# 3. Activate virtual environment
-source .venv/bin/activate
-
-# 4. Install/Verify dependencies
+# 3. Verify/Install dependencies using venv python directly
 echo "[*] Verifying and installing dependencies..."
-pip install --upgrade pip -q
-pip install -r scraper/requirements.txt -q
+.venv/bin/python -m pip install --upgrade pip -q
+.venv/bin/python -m pip install -r scraper/requirements.txt -q
 if [ $? -ne 0 ]; then
     echo "[!] Error: Failed to install python dependencies."
     exit 1
 fi
 
-# 5. Install Playwright browser binaries
+# 4. Install Playwright browser binaries
 if [ ! -f ".venv/playwright_installed" ]; then
     echo "[*] Installing Playwright Chromium browser binaries (this happens once)..."
-    playwright install chromium
+    .venv/bin/playwright install chromium
     if [ $? -ne 0 ]; then
         echo "[!] Error: Failed to install Playwright Chromium browser."
         exit 1
@@ -51,8 +48,8 @@ if [ ! -f ".venv/playwright_installed" ]; then
     touch ".venv/playwright_installed"
 fi
 
-# 6. Launch the scraper
+# 5. Launch the scraper
 echo "[+] Setup complete! Launching scraper..."
 echo "=================================================="
 
-python scraper/scraper.py "$@"
+.venv/bin/python scraper/scraper.py "$@"
