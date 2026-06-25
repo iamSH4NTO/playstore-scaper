@@ -21,9 +21,9 @@ A robust and efficient tool to scrape Google Play Store search results. Powered 
 The root folder contains a launcher script (`run.sh`) that automatically manages virtual environment setup, installs requirements from `scraper/requirements.txt`, checks/installs Playwright Chromium browser drivers, and boots the scraper.
 
 ### Run via Launcher:
-Simply execute the launcher script from the root directory:
+Make the script executable (only needed once) and run it:
 ```bash
-./run.sh
+chmod +x run.sh && ./run.sh
 ```
 
 It will guide you through three interactive input fields:

@@ -5,14 +5,41 @@
 # ==================================================
 
 import argparse
+import json
 import os
 import re
 import sys
 import time
+import urllib.request
 import pandas as pd
 from google_play_scraper import app
 from tabulate import tabulate
 from playwright.sync_api import sync_playwright
+
+def send_to_n8n(webhook_url, data):
+    print(f"\n[*] Sending {len(data)} results to n8n webhook: {webhook_url}...")
+    try:
+        # Convert Python list of dicts to JSON bytes
+        payload = json.dumps(data).encode("utf-8")
+        
+        req = urllib.request.Request(
+            webhook_url,
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "Playstore-Scraper-Client"
+            },
+            method="POST"
+        )
+        
+        # 15 second timeout for request
+        with urllib.request.urlopen(req, timeout=15) as response:
+            status_code = response.getcode()
+            print(f"[+] Successfully sent to n8n! (HTTP {status_code})")
+            
+    except Exception as e:
+        print(f"[!] Failed to send data to n8n webhook: {e}")
+
 
 def clean_filename(keyword):
     # Lowercase, replace spaces/hyphens with underscores, remove non-alphanumeric characters
@@ -154,6 +181,7 @@ def main():
     parser.add_argument("-k", "--keyword", type=str, help="Search keyword")
     parser.add_argument("-l", "--limit", type=int, default=20, help="Number of app results to scrape (default: 20)")
     parser.add_argument("-o", "--output", type=str, default=None, help="Output CSV file path (default: based on keyword)")
+    parser.add_argument("-w", "--webhook", type=str, default=None, help="n8n webhook URL to send scraped results")
     args = parser.parse_args()
 
     # If no keyword is provided, prompt the user
@@ -227,6 +255,10 @@ def main():
         print(f"[+] Successfully saved contacts (App Name, Developer Email) to: {contacts_file}")
     except Exception as e:
         print(f"[!] Error saving contacts CSV: {e}")
+        
+    # Send results to n8n webhook if configured
+    if args.webhook:
+        send_to_n8n(args.webhook, results)
         
     # Display a beautiful, structured table of all scraped apps
     print(f"\n--- Scraped Apps ({len(results)} results) ---")
